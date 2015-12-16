@@ -1,5 +1,18 @@
 language: go
 sudo: false
 
+notifications:
+  slack:
+    rooms:
+      secure: "Pzv40+pWdlBeRW50uyuLzO6pN+3tR0EqI5UUUQxdrCvidaDEgINmgqSQV15cf+HMrnTx3dQ5Uv3bVHH+g81p0tdCYnReVaBzwv/Q0huhjpUsAselQqmtp6yZo4+cU95izv3xSq52HeiXUYs7sX7ayIMw+UbWM4NkJZLUGS0NKM3bl2qM/wQjWoobgQ3Qw/K/tVjrmshaJPfVdKqD2niljIi51nqO9JGoD5hPlOZq3e3xT/ExrucpaEu4vaxh/bOAPf2BfY1BYu3IUffeFW0gHy7d/nsqESI9XtQEAUnN1ZRVqrDiFFJsfEm9kf06u48t85jDBh62d9OMH38AcWQNkgQUN8R33k2zCWKwK9O15Klvh56FR8tdba4Vcy8dE4rEcXaIpMqtLIzgB/ytNIKCj8TLhFY8GrPfuFHeo0Jftt+D6bPpf3FyDmy+it11Z5Npa34m94xfzmfNi2F9WzoMwRP09Vgp/iJRqABVzJJ+DyKlFiC9Dsv6tuYwD4rdvUaNY8a+aeq6eZZyLZcPOkH49GRRqRhVgnYAliM0HRP5SuT/m1055VICdOhtaGNZhfYebonskJfPpLFd4/+BpGNKpl7K1GAcY/oN8eUAQ4G7gnbayP8oSU8QxmrDYvP4QLSXmtXqtVAq9P6tNyCJrAr+geUapMbHMrisbo6FwObB55k="
+    on_success: always
+    on_failure: always
+    template:
+      - "%{repository_slug} %{message} %{duration}"
+      - "%{author} : (<%{compare_url}|%{commit}>) %{commit_message}"
+      - "Build Details: %{build_url}"
+
+
+
 script: 
   - go test
