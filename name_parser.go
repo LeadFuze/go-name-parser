@@ -1,19 +1,26 @@
-package util
+package names
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
-var validSuffixes StringArray = []string{
+const (
+	EMPTY = ""
+)
+
+var validSuffixes stringArray = []string{
 	"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX",
 	"Senior", "Junior", "Jr", "Sr",
 	"PhD", "APR", "RPh", "PE", "MD", "MA", "DMD", "CME",
 }
 
-var compoundLastNames StringArray = []string{
+var compoundLastNames stringArray = []string{
 	"vere", "von", "van", "de", "del", "della", "di", "da", "pietro",
 	"vanden", "du", "st.", "st", "la", "lo", "ter", "bin", "ibn",
 }
 
-type NameParserResult struct {
+type Name struct {
 	Salutation string
 	FirstName  string
 	Initials   string
@@ -21,57 +28,120 @@ type NameParserResult struct {
 	Suffix     string
 }
 
-func (npr NameParserResult) String() string {
-	fullName := ""
+func (n Name) String() string {
+	fullName := EMPTY
 
-	if !IsEmpty(npr.Salutation) {
-		fullName = fullName + npr.Salutation
+	if !isEmpty(n.Salutation) {
+		fullName = fullName + n.Salutation
 	}
 
-	if !IsEmpty(npr.FirstName) {
-		if !IsEmpty(fullName) {
+	if !isEmpty(n.FirstName) {
+		if !isEmpty(fullName) {
 			fullName = fullName + " "
 		}
-		fullName = fullName + npr.FirstName
+		fullName = fullName + n.FirstName
 	}
 
-	if !IsEmpty(npr.Initials) {
-		if !IsEmpty(fullName) {
+	if !isEmpty(n.Initials) {
+		if !isEmpty(fullName) {
 			fullName = fullName + " "
 		}
-		fullName = fullName + npr.Initials
+		fullName = fullName + n.Initials
 	}
 
-	if !IsEmpty(npr.LastName) {
-		if !IsEmpty(fullName) {
+	if !isEmpty(n.LastName) {
+		if !isEmpty(fullName) {
 			fullName = fullName + " "
 		}
-		fullName = fullName + npr.LastName
+		fullName = fullName + n.LastName
 	}
-	if !IsEmpty(npr.Suffix) {
-		if !IsEmpty(fullName) {
+	if !isEmpty(n.Suffix) {
+		if !isEmpty(fullName) {
 			fullName = fullName + " "
 		}
-		fullName = fullName + npr.Suffix
+		fullName = fullName + n.Suffix
 	}
 
 	return fullName
 }
 
-type NameParser struct{}
+func Parse(input string) *Name {
+	fullName := trimWhitespace(input)
 
-func (np NameParser) cleanString(input string) string {
-	return strings.ToLower(strings.Replace(input, ".", "", -1))
+	rawNameParts := strings.Split(fullName, " ")
+
+	name := new(Name)
+
+	nameParts := []string{}
+
+	lastName := EMPTY
+	firstName := EMPTY
+	initials := EMPTY
+	for _, part := range rawNameParts {
+		if !strings.Contains(part, "(") {
+			nameParts = append(nameParts, part)
+		}
+	}
+
+	numWords := len(nameParts)
+	salutation := processSalutation(nameParts[0])
+	suffix := processSuffix(nameParts[len(nameParts)-1])
+
+	start := 0
+	if !isEmpty(salutation) {
+		start = 1
+	}
+
+	end := numWords
+	if !isEmpty(suffix) {
+		end = numWords - 1
+	}
+
+	i := 0
+	for i = start; i < (end - 1); i++ {
+		word := nameParts[i]
+		if isCompoundLastName(word) && i != start {
+			break
+		}
+		if areInitials(word) {
+			if i == start {
+				if areInitials(nameParts[i+1]) {
+					firstName = firstName + " " + strings.ToUpper(word)
+				} else {
+					initials = initials + " " + strings.ToUpper(word)
+				}
+			} else {
+				initials = initials + " " + strings.ToUpper(word)
+			}
+		} else {
+			firstName = firstName + " " + fixCase(word)
+		}
+	}
+
+	if (end - start) > 1 {
+		for j := i; j < end; j++ {
+			lastName = lastName + " " + fixCase(nameParts[j])
+		}
+	} else {
+		firstName = fixCase(nameParts[i])
+	}
+
+	name.Salutation = salutation
+	name.FirstName = trimWhitespace(firstName)
+	name.Initials = trimWhitespace(initials)
+	name.LastName = trimWhitespace(lastName)
+	name.Suffix = suffix
+
+	return name
 }
 
-func (np NameParser) processSalutation(input string) string {
-
-	word := np.cleanString(input)
+func processSalutation(input string) string {
+	word := cleanString(input)
 
 	switch word {
 	case "mr", "master", "mister":
 		return "Mr."
-	case "mrs":
+	case "mrs", "misses":
 		return "Mrs."
 	case "ms", "miss":
 		return "Ms."
@@ -86,109 +156,100 @@ func (np NameParser) processSalutation(input string) string {
 	return EMPTY
 }
 
-func (np NameParser) processSuffix(input string) string {
-	word := np.cleanString(input)
+func processSuffix(input string) string {
+	word := cleanString(input)
 	return validSuffixes.GetByLower(word)
 }
 
-func (np NameParser) isCompoundLastName(input string) bool {
-	word := np.cleanString(input)
+func isCompoundLastName(input string) bool {
+	word := cleanString(input)
 	exists := compoundLastNames.ContainsLower(word)
 	return exists
 }
 
-func (np NameParser) isInitial(input string) bool {
-	word := np.cleanString(input)
+func areInitials(input string) bool {
+	word := cleanString(input)
 	return len(word) == 1
 }
 
-func (np NameParser) safeUppercaseFirst(seperator string, input string) string {
+func uppercaseFirstAll(input string, seperator string) string {
 	words := []string{}
 	parts := strings.Split(input, seperator)
 	for _, thisWord := range parts {
-		toAppend := ""
-		if IsCamelCase(thisWord) {
+		toAppend := EMPTY
+		if isCamelCase(thisWord) {
 			toAppend = thisWord
 		} else {
-			toAppend = strings.ToLower(UpperCaseFirst(thisWord))
+			toAppend = strings.ToLower(upperCaseFirst(thisWord))
 		}
 		words = append(words, toAppend)
 	}
-	return Join(words, seperator)
+	return strings.Join(words, seperator)
 }
 
-func (np NameParser) fixCase(input string) string {
-	word := np.safeUppercaseFirst("-", input)
-	word = np.safeUppercaseFirst(".", word)
+func fixCase(input string) string {
+	word := uppercaseFirstAll(input, "-")
+	word = uppercaseFirstAll(word, ".")
 	return word
 }
 
-func (np NameParser) Parse(input string) NameParserResult {
-	fulllastName := TrimWhitespace(input)
+func cleanString(input string) string {
+	return strings.ToLower(strings.Replace(input, ".", "", -1))
+}
 
-	unfilteredNameParts := strings.Split(fulllastName, " ")
+func trimWhitespace(input string) string {
+	return strings.Trim(input, " \t")
+}
 
-	name := NameParserResult{}
+func upperCaseFirst(input string) string {
+	return strings.Title(strings.ToLower(input))
+}
 
-	nameParts := []string{}
+func isCamelCase(input string) bool {
+	hasLowers := false
+	hasUppers := false
 
-	lastName := ""
-	firstName := ""
-	initials := ""
-	for _, part := range unfilteredNameParts {
-		if !strings.Contains(part, "(") {
-			nameParts = append(nameParts, part)
+	for _, c := range input {
+		if unicode.IsUpper(c) {
+			hasUppers = true
+		}
+		if unicode.IsLower(c) {
+			hasLowers = true
 		}
 	}
 
-	numWords := len(nameParts)
-	salutation := np.processSalutation(nameParts[0])
-	suffix := np.processSuffix(nameParts[len(nameParts)-1])
+	return hasLowers && hasUppers
+}
 
-	start := 0
-	if !IsEmpty(salutation) {
-		start = 1
-	}
+func isEmpty(input string) bool {
+	return len(input) == 0
+}
 
-	end := numWords
-	if !IsEmpty(suffix) {
-		end = numWords - 1
-	}
+type stringArray []string
 
-	i := 0
-	for i = start; i < (end - 1); i++ {
-		word := nameParts[i]
-		if np.isCompoundLastName(word) && i != start {
-			break
-		}
-		if np.isInitial(word) {
-			if i == start {
-				if np.isInitial(nameParts[i+1]) {
-					firstName = firstName + " " + strings.ToUpper(word)
-				} else {
-					initials = initials + " " + strings.ToUpper(word)
-				}
-			} else {
-				initials = initials + " " + strings.ToUpper(word)
-			}
-		} else {
-			firstName = firstName + " " + np.fixCase(word)
+func (sa stringArray) Contains(elem string) bool {
+	for _, arrayElem := range sa {
+		if arrayElem == elem {
+			return true
 		}
 	}
+	return false
+}
 
-	if (end - start) > 1 {
-		for j := i; j < end; j++ {
-			lastName = lastName + " " + np.fixCase(nameParts[j])
+func (sa stringArray) ContainsLower(elem string) bool {
+	for _, arrayElem := range sa {
+		if strings.ToLower(arrayElem) == elem {
+			return true
 		}
-	} else {
-		firstName = np.fixCase(nameParts[i])
 	}
+	return false
+}
 
-	name.Salutation = salutation
-	name.FirstName = TrimWhitespace(firstName)
-	name.Initials = TrimWhitespace(initials)
-	name.LastName = TrimWhitespace(lastName)
-	name.Suffix = suffix
-
-	return name
+func (sa stringArray) GetByLower(elem string) string {
+	for _, arrayElem := range sa {
+		if strings.ToLower(arrayElem) == elem {
+			return arrayElem
+		}
+	}
+	return EMPTY
 }
