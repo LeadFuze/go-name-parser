@@ -12,7 +12,5 @@ notifications:
       - "%{author} : (<%{compare_url}|%{commit}>) %{commit_message}"
       - "Build Details: %{build_url}"
 
-
-
 script: 
   - go test

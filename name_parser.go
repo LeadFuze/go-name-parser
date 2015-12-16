@@ -2,20 +2,18 @@ package names
 
 import (
 	"strings"
-	"unicode"
+
+	"github.com/blendlabs/go-util"
+	"github.com/blendlabs/go-util/collections"
 )
 
-const (
-	EMPTY = ""
-)
-
-var validSuffixes stringArray = []string{
+var validSuffixes collections.StringArray = []string{
 	"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX",
 	"Senior", "Junior", "Jr", "Sr",
 	"PhD", "APR", "RPh", "PE", "MD", "MA", "DMD", "CME",
 }
 
-var compoundLastNames stringArray = []string{
+var compoundLastNames collections.StringArray = []string{
 	"vere", "von", "van", "de", "del", "della", "di", "da", "pietro",
 	"vanden", "du", "st.", "st", "la", "lo", "ter", "bin", "ibn",
 }
@@ -29,34 +27,34 @@ type Name struct {
 }
 
 func (n Name) String() string {
-	fullName := EMPTY
+	fullName := util.EMPTY
 
-	if !isEmpty(n.Salutation) {
+	if !util.IsEmpty(n.Salutation) {
 		fullName = fullName + n.Salutation
 	}
 
-	if !isEmpty(n.FirstName) {
-		if !isEmpty(fullName) {
+	if !util.IsEmpty(n.FirstName) {
+		if !util.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.FirstName
 	}
 
-	if !isEmpty(n.MiddleName) {
-		if !isEmpty(fullName) {
+	if !util.IsEmpty(n.MiddleName) {
+		if !util.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.MiddleName
 	}
 
-	if !isEmpty(n.LastName) {
-		if !isEmpty(fullName) {
+	if !util.IsEmpty(n.LastName) {
+		if !util.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.LastName
 	}
-	if !isEmpty(n.Suffix) {
-		if !isEmpty(fullName) {
+	if !util.IsEmpty(n.Suffix) {
+		if !util.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.Suffix
@@ -66,7 +64,7 @@ func (n Name) String() string {
 }
 
 func Parse(input string) *Name {
-	fullName := trimWhitespace(input)
+	fullName := util.TrimWhitespace(input)
 
 	rawNameParts := strings.Split(fullName, " ")
 
@@ -74,9 +72,9 @@ func Parse(input string) *Name {
 
 	nameParts := []string{}
 
-	lastName := EMPTY
-	firstName := EMPTY
-	initials := EMPTY
+	lastName := util.EMPTY
+	firstName := util.EMPTY
+	initials := util.EMPTY
 	for _, part := range rawNameParts {
 		if !strings.Contains(part, "(") {
 			nameParts = append(nameParts, part)
@@ -88,12 +86,12 @@ func Parse(input string) *Name {
 	suffix := processSuffix(nameParts[len(nameParts)-1])
 
 	start := 0
-	if !isEmpty(salutation) {
+	if !util.IsEmpty(salutation) {
 		start = 1
 	}
 
 	end := numWords
-	if !isEmpty(suffix) {
+	if !util.IsEmpty(suffix) {
 		end = numWords - 1
 	}
 
@@ -127,9 +125,9 @@ func Parse(input string) *Name {
 	}
 
 	name.Salutation = salutation
-	name.FirstName = trimWhitespace(firstName)
-	name.MiddleName = trimWhitespace(initials)
-	name.LastName = trimWhitespace(lastName)
+	name.FirstName = util.TrimWhitespace(firstName)
+	name.MiddleName = util.TrimWhitespace(initials)
+	name.LastName = util.TrimWhitespace(lastName)
 	name.Suffix = suffix
 
 	return name
@@ -153,7 +151,7 @@ func processSalutation(input string) string {
 		return "Fr."
 	}
 
-	return EMPTY
+	return util.EMPTY
 }
 
 func processSuffix(input string) string {
@@ -176,8 +174,8 @@ func uppercaseFirstAll(input string, seperator string) string {
 	words := []string{}
 	parts := strings.Split(input, seperator)
 	for _, thisWord := range parts {
-		toAppend := EMPTY
-		if isCamelCase(thisWord) {
+		toAppend := util.EMPTY
+		if util.IsCamelCase(thisWord) {
 			toAppend = thisWord
 		} else {
 			toAppend = strings.ToLower(upperCaseFirst(thisWord))
@@ -185,6 +183,10 @@ func uppercaseFirstAll(input string, seperator string) string {
 		words = append(words, toAppend)
 	}
 	return strings.Join(words, seperator)
+}
+
+func upperCaseFirst(input string) string {
+	return strings.Title(strings.ToLower(input))
 }
 
 func fixCase(input string) string {
@@ -195,61 +197,4 @@ func fixCase(input string) string {
 
 func cleanString(input string) string {
 	return strings.ToLower(strings.Replace(input, ".", "", -1))
-}
-
-func trimWhitespace(input string) string {
-	return strings.Trim(input, " \t")
-}
-
-func upperCaseFirst(input string) string {
-	return strings.Title(strings.ToLower(input))
-}
-
-func isCamelCase(input string) bool {
-	hasLowers := false
-	hasUppers := false
-
-	for _, c := range input {
-		if unicode.IsUpper(c) {
-			hasUppers = true
-		}
-		if unicode.IsLower(c) {
-			hasLowers = true
-		}
-	}
-
-	return hasLowers && hasUppers
-}
-
-func isEmpty(input string) bool {
-	return len(input) == 0
-}
-
-type stringArray []string
-
-func (sa stringArray) Contains(elem string) bool {
-	for _, arrayElem := range sa {
-		if arrayElem == elem {
-			return true
-		}
-	}
-	return false
-}
-
-func (sa stringArray) ContainsLower(elem string) bool {
-	for _, arrayElem := range sa {
-		if strings.ToLower(arrayElem) == elem {
-			return true
-		}
-	}
-	return false
-}
-
-func (sa stringArray) GetByLower(elem string) string {
-	for _, arrayElem := range sa {
-		if strings.ToLower(arrayElem) == elem {
-			return arrayElem
-		}
-	}
-	return EMPTY
 }
