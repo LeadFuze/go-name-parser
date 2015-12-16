@@ -23,7 +23,7 @@ var compoundLastNames stringArray = []string{
 type Name struct {
 	Salutation string
 	FirstName  string
-	Initials   string
+	MiddleName string
 	LastName   string
 	Suffix     string
 }
@@ -42,11 +42,11 @@ func (n Name) String() string {
 		fullName = fullName + n.FirstName
 	}
 
-	if !isEmpty(n.Initials) {
+	if !isEmpty(n.MiddleName) {
 		if !isEmpty(fullName) {
 			fullName = fullName + " "
 		}
-		fullName = fullName + n.Initials
+		fullName = fullName + n.MiddleName
 	}
 
 	if !isEmpty(n.LastName) {
@@ -103,9 +103,9 @@ func Parse(input string) *Name {
 		if isCompoundLastName(word) && i != start {
 			break
 		}
-		if areInitials(word) {
+		if isMiddleName(word) {
 			if i == start {
-				if areInitials(nameParts[i+1]) {
+				if isMiddleName(nameParts[i+1]) {
 					firstName = firstName + " " + strings.ToUpper(word)
 				} else {
 					initials = initials + " " + strings.ToUpper(word)
@@ -128,7 +128,7 @@ func Parse(input string) *Name {
 
 	name.Salutation = salutation
 	name.FirstName = trimWhitespace(firstName)
-	name.Initials = trimWhitespace(initials)
+	name.MiddleName = trimWhitespace(initials)
 	name.LastName = trimWhitespace(lastName)
 	name.Suffix = suffix
 
@@ -167,7 +167,7 @@ func isCompoundLastName(input string) bool {
 	return exists
 }
 
-func areInitials(input string) bool {
+func isMiddleName(input string) bool {
 	word := cleanString(input)
 	return len(word) == 1
 }
