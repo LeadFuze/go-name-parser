@@ -18,6 +18,7 @@ var compoundLastNames collections.StringArray = []string{
 	"vanden", "du", "st.", "st", "la", "lo", "ter", "bin", "ibn",
 }
 
+// Name is a structured/parsed name.
 type Name struct {
 	Salutation string
 	FirstName  string
@@ -26,8 +27,9 @@ type Name struct {
 	Suffix     string
 }
 
+// String returns the string representation of a name.
 func (n Name) String() string {
-	fullName := util.EMPTY
+	fullName := util.StringEmpty
 
 	if !util.IsEmpty(n.Salutation) {
 		fullName = fullName + n.Salutation
@@ -63,6 +65,7 @@ func (n Name) String() string {
 	return fullName
 }
 
+// Parse parses a string into a name.
 func Parse(input string) *Name {
 	fullName := util.TrimWhitespace(input)
 
@@ -72,9 +75,9 @@ func Parse(input string) *Name {
 
 	nameParts := []string{}
 
-	lastName := util.EMPTY
-	firstName := util.EMPTY
-	initials := util.EMPTY
+	lastName := util.StringEmpty
+	firstName := util.StringEmpty
+	initials := util.StringEmpty
 	for _, part := range rawNameParts {
 		if !strings.Contains(part, "(") {
 			nameParts = append(nameParts, part)
@@ -151,7 +154,7 @@ func processSalutation(input string) string {
 		return "Fr."
 	}
 
-	return util.EMPTY
+	return util.StringEmpty
 }
 
 func processSuffix(input string) string {
@@ -174,7 +177,7 @@ func uppercaseFirstAll(input string, seperator string) string {
 	words := []string{}
 	parts := strings.Split(input, seperator)
 	for _, thisWord := range parts {
-		toAppend := util.EMPTY
+		toAppend := util.StringEmpty
 		if util.IsCamelCase(thisWord) {
 			toAppend = thisWord
 		} else {
