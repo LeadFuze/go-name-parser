@@ -31,32 +31,32 @@ type Name struct {
 func (n Name) String() string {
 	fullName := util.StringEmpty
 
-	if !util.IsEmpty(n.Salutation) {
+	if !util.String.IsEmpty(n.Salutation) {
 		fullName = fullName + n.Salutation
 	}
 
-	if !util.IsEmpty(n.FirstName) {
-		if !util.IsEmpty(fullName) {
+	if !util.String.IsEmpty(n.FirstName) {
+		if !util.String.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.FirstName
 	}
 
-	if !util.IsEmpty(n.MiddleName) {
-		if !util.IsEmpty(fullName) {
+	if !util.String.IsEmpty(n.MiddleName) {
+		if !util.String.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.MiddleName
 	}
 
-	if !util.IsEmpty(n.LastName) {
-		if !util.IsEmpty(fullName) {
+	if !util.String.IsEmpty(n.LastName) {
+		if !util.String.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.LastName
 	}
-	if !util.IsEmpty(n.Suffix) {
-		if !util.IsEmpty(fullName) {
+	if !util.String.IsEmpty(n.Suffix) {
+		if !util.String.IsEmpty(fullName) {
 			fullName = fullName + " "
 		}
 		fullName = fullName + n.Suffix
@@ -67,7 +67,7 @@ func (n Name) String() string {
 
 // Parse parses a string into a name.
 func Parse(input string) *Name {
-	fullName := util.TrimWhitespace(input)
+	fullName := util.String.TrimWhitespace(input)
 
 	rawNameParts := strings.Split(fullName, " ")
 
@@ -89,12 +89,12 @@ func Parse(input string) *Name {
 	suffix := processSuffix(nameParts[len(nameParts)-1])
 
 	start := 0
-	if !util.IsEmpty(salutation) {
+	if !util.String.IsEmpty(salutation) {
 		start = 1
 	}
 
 	end := numWords
-	if !util.IsEmpty(suffix) {
+	if !util.String.IsEmpty(suffix) {
 		end = numWords - 1
 	}
 
@@ -128,9 +128,9 @@ func Parse(input string) *Name {
 	}
 
 	name.Salutation = salutation
-	name.FirstName = util.TrimWhitespace(firstName)
-	name.MiddleName = util.TrimWhitespace(initials)
-	name.LastName = util.TrimWhitespace(lastName)
+	name.FirstName = util.String.TrimWhitespace(firstName)
+	name.MiddleName = util.String.TrimWhitespace(initials)
+	name.LastName = util.String.TrimWhitespace(lastName)
 	name.Suffix = suffix
 
 	return name
@@ -178,7 +178,7 @@ func uppercaseFirstAll(input string, seperator string) string {
 	parts := strings.Split(input, seperator)
 	for _, thisWord := range parts {
 		toAppend := util.StringEmpty
-		if util.IsCamelCase(thisWord) {
+		if util.String.IsCamelCase(thisWord) {
 			toAppend = thisWord
 		} else {
 			toAppend = strings.ToLower(upperCaseFirst(thisWord))
